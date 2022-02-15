@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,7 +29,7 @@ namespace Routing
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddSignalR();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -77,6 +78,7 @@ namespace Routing
                 }).WithDisplayName("Hello");
 
                 endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/chathub");
             });
 
             // Location 4: runs after UseEndpoints - will only run if there was no match
@@ -86,6 +88,14 @@ namespace Routing
                 return next(context);
             });
 
+        }
+    }
+
+    public class ChatHub : Hub
+    {
+        public Task SendMessage(string user, string message)
+        {
+            return Clients.All.SendAsync("ReceiveMessage", user, message);
         }
     }
 }
