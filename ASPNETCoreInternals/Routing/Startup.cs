@@ -62,6 +62,7 @@ namespace Routing
             // Location 2: after routing runs, endpoint will be non-null if routing found a match
             app.Use(next => context =>
             {
+                var endpointBuilder = app.Properties["__EndpointRouteBuilder"];
                 var endpointFeature = context.Features.Get<IEndpointFeature>();
                 Console.WriteLine($"2. Endpoint: {context.GetEndpoint()?.DisplayName ?? "(null)"}");
                 return next(context);
