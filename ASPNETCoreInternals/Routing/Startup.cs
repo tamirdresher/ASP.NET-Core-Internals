@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Routing
@@ -77,6 +79,18 @@ namespace Routing
                         $"3. Endpoint: {context.GetEndpoint()?.DisplayName ?? "(null)"}");
                     return Task.CompletedTask;
                 }).WithDisplayName("Hello");
+
+                endpoints.MapGet("/Endpoints", async context =>
+                {
+                    if (app.Properties["__EndpointRouteBuilder"] is IEndpointRouteBuilder endpointBuilder)
+                    {
+                        var allEndpoints =
+                            from src in endpointBuilder.DataSources
+                            from endpoint in src.Endpoints
+                            select new { DataSourceName = src.GetType().FullName, Endpoint = endpoint.ToString(), RoutePattern=((RouteEndpoint)endpoint).RoutePattern };
+                        await context.Response.WriteAsJsonAsync(allEndpoints.ToArray(), new JsonSerializerOptions { WriteIndented = true });
+                    }                    
+                }).WithDisplayName("Endpoints");
 
                 endpoints.MapControllers();
                 endpoints.MapHub<ChatHub>("/chathub");
